@@ -1,22 +1,17 @@
-var Backdrop = function(layer, count, width, height, material) {
+var Backdrop = function(layer, bounds, count, width, height, material) {
   var self = this;
   var items = [];
 
   self.update = function() {
-    for(var i = 0; i < items.length; i++) {
-      var item = items[i];
-      if(layer.isVisible(item))
- 
-  
-    }
+
   };
 
   var randomX = function() {
-    return Math.random() * layer.getWidth();
+    return bounds.minx + Math.random() * (bounds.maxx - bounds.minx);
   };
 
   var randomY = function() {
-    return Math.random() * layer.getHeight();
+    return bounds.miny + Math.random() * (bounds.maxy - bounds.miny);
   };  
 
   for(var i = 0; i < count; i++) {  
@@ -43,11 +38,41 @@ var Game = function () {
 
   var world = engine.world();
                   
-  var backdrop = world.addLayer(5.0);
-  var foreground = world.addLayer(8.0);
+ var background = world.addLayer(0.1);
+  var skyMaterial = new Material(0,0,126);
+  var groundMaterial = new Material(0, 128, 0);
+
+  var sky = new Backdrop(background, {
+    minx: 0, maxx: 0,
+    miny: 0, maxy: 0
+  }, 1, background.getWidth(), background.getHeight() / 2.0, skyMaterial);
+
+  var grass = new Backdrop(background, {
+    minx: 0, maxx: 0,
+    miny: background.getHeight() / 2.0, maxy: background.getHeight() / 2.0
+  }, 1, background.getWidth(), background.getHeight() / 2.0, groundMaterial);
+
+  var cloudLayer = world.addLayer(2.0);
+  var cloudMaterial = new Material(255,255,255);
+  cloudMaterial.setImage('cloud.png');
+  var backdrop = new Backdrop(cloudLayer, {
+    minx: 0, maxx: cloudLayer.getWidth(),
+    miny: 0, maxy: cloudLayer.getHeight() / 3.0
+  }, 10, 128, 128, cloudMaterial);
+
+  var treeLayer = world.addLayer(5.0);
+  var treeMaterial = new Material(255,255,255);
+  treeMaterial.setImage('tree.png');
+  var backdrop = new Backdrop(treeLayer, {
+    minx: 0, maxx: treeLayer.getWidth(),
+    miny: treeLayer.getHeight() / 2 - 30,
+    maxy: treeLayer.getHeight()
+  }, 10, 32, 32, treeMaterial);
+
+  var foregroundLayer = world.addLayer(8.0);
 
   var doLogic = function() {
-    
+    backdrop.update();
   };
 
   var renderScene = function () {
