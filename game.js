@@ -63,6 +63,8 @@ var Game = function () {
   var treeLayer = world.addLayer(5.0);
   var treeMaterial = new Material(255,255,255);
   treeMaterial.setImage('tree.png');
+
+
   var backdrop = new Backdrop(treeLayer, {
     minx: 0, maxx: treeLayer.getWidth(),
     miny: treeLayer.getHeight() / 2 - 30,
