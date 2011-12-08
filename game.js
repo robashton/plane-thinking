@@ -1,80 +1,32 @@
-var Backdrop = function(layer, bounds, count, width, height, material) {
-  var self = this;
-  var items = [];
-
-  self.update = function() {
-
-  };
-
-  var randomX = function() {
-    return bounds.minx + Math.random() * (bounds.maxx - bounds.minx);
-  };
-
-  var randomY = function() {
-    return bounds.miny + Math.random() * (bounds.maxy - bounds.miny);
-  };  
-
-  for(var i = 0; i < count; i++) {  
-    var x = randomX();
-    var y = randomY();
-    var entity = new Entity(x, y, width, height, material);
-    layer.addEntity(entity);
-    items.push({
-      renderable: entity,
-      x: x,
-      y: y
-    });
-  }   
-};
-
 var Game = function () {
   var self = this;
+  var scenes = [];
 
   var engine = new EngineBuilder('colour', 'depth', 'webgl')
                     .nearestPoint(8.0)
-                    .sceneWidth(320)
-                    .sceneHeight(320)
+                    .sceneWidth(640)
+                    .sceneHeight(480)
                     .build();
 
   var world = engine.world();
-                  
- var background = world.addLayer(0.1);
-  var skyMaterial = new Material(0,0,126);
-  var groundMaterial = new Material(0, 128, 0);
+  
+  var craftLayer = world.addLayer(8.0);
+  var playerScene = new Scene(craftLayer);
 
-  var sky = new Backdrop(background, {
-    minx: 0, maxx: 0,
-    miny: 0, maxy: 0
-  }, 1, background.getWidth(), background.getHeight() / 2.0, skyMaterial);
+  var playerCraft = new Aircraft();
+  playerScene.addEntity(playerCraft);
 
-  var grass = new Backdrop(background, {
-    minx: 0, maxx: 0,
-    miny: background.getHeight() / 2.0, maxy: background.getHeight() / 2.0
-  }, 1, background.getWidth(), background.getHeight() / 2.0, groundMaterial);
+  var controller = new Controller(playerCraft);
+  playerScene.addEntity(controller);
 
-  var cloudLayer = world.addLayer(2.0);
-  var cloudMaterial = new Material(255,255,255);
-  cloudMaterial.setImage('cloud.png');
-  var backdrop = new Backdrop(cloudLayer, {
-    minx: 0, maxx: cloudLayer.getWidth(),
-    miny: 0, maxy: cloudLayer.getHeight() / 3.0
-  }, 10, 128, 128, cloudMaterial);
+  var scroller  = new LayerScroller([craftLayer]);
+  playerScene.addEntity(scroller);
 
-  var treeLayer = world.addLayer(5.0);
-  var treeMaterial = new Material(255,255,255);
-  treeMaterial.setImage('tree.png');
-
-
-  var backdrop = new Backdrop(treeLayer, {
-    minx: 0, maxx: treeLayer.getWidth(),
-    miny: treeLayer.getHeight() / 2 - 30,
-    maxy: treeLayer.getHeight()
-  }, 10, 32, 32, treeMaterial);
-
-  var foregroundLayer = world.addLayer(8.0);
-
+  scenes.push(playerScene);
+  
   var doLogic = function() {
-    backdrop.update();
+    for(var i = 0; i < scenes.length; i++)
+      scenes[i].tick();     
   };
 
   var renderScene = function () {
@@ -86,3 +38,135 @@ var Game = function () {
     setInterval(renderScene, 1000 / 30);
   };
 };
+
+var LayerScroller = function(layers) {
+  var self = this;
+  var x = 0;
+
+  self.tick = function() {
+    x -= 3.0;
+    
+    for(var i = 0; i < layers.length; i++)
+      layers[i].transformX(x);
+  };
+};
+
+var Clouds = function(layer) {
+  var self = this;
+
+  
+  
+
+};
+
+var Scene = function(layer) {
+  var self = this;
+  var entities = [];
+
+  self.addEntity = function(entity) {
+    entities.push(entity);
+    registerEntityRenderable(entity);
+  };
+
+  self.tick = function() {
+     self.each(function(entity) {
+        entity.tick();
+     });
+  };
+
+  self.each = function(callback) {
+    for(var i = 0 ; i < entities.length; i++)
+      callback(entities[i]);
+  };
+
+  var registerEntityRenderable = function(entity) {
+    if(!entity.renderable) return;
+    var renderable = entity.renderable();
+    layer.addRenderable(renderable);
+  };
+};
+
+var Aircraft = function() {
+  var self = this;
+  var x = 0;
+  var y = 0;
+  var aircraftMaterial = new Material(255,255,255);
+  aircraftMaterial.setImage('plane.png');
+  var renderable = new Renderable(0,0, 64, 64, aircraftMaterial);
+
+  self.renderable = function() {
+    return renderable;
+  };   
+
+  self.tick = function() {
+    x += Aircraft.Speed;
+    renderable.position(x,y);
+  };
+
+  self.moveLeft = function() {
+    x -= 5.0;
+  };
+
+  self.moveRight = function() {
+    x += 5.0;
+  };
+
+  self.moveUp = function() {
+    y -= 5.0;
+  };
+
+  self.moveDown = function() {
+    y += 5.0;
+  };
+};
+
+Aircraft.Speed = 3.0;
+
+var Controller = function(craft) {
+  var self = this;
+
+  var movingLeft = false,
+      movingRight = false,
+      movingUp = false,
+      movingDown = false;
+  
+  document.onkeydown = function(ev) {
+    if(ev.keyCode === 37)
+      movingLeft = true;
+    else if(ev.keyCode === 38)
+      movingUp = true;
+    else if(ev.keyCode === 39)
+      movingRight = true;
+    else if(ev.keyCode === 40)
+      movingDown = true;
+    return false;
+  };
+
+  document.onkeyup = function(ev) {
+    if(ev.keyCode === 37)
+      movingLeft = false;
+    else if(ev.keyCode === 38)
+      movingUp = false;
+    else if(ev.keyCode === 39)
+      movingRight = false;
+    else if(ev.keyCode === 40)
+      movingDown = false;
+    return false;
+  };
+
+  self.tick = function() {
+    if(movingUp)
+      craft.moveUp();
+    else if (movingDown)
+      craft.moveDown();
+
+    if(movingLeft)
+      craft.moveLeft();
+    else if (movingRight)
+      craft.moveRight();
+
+
+  };
+};
+
+
