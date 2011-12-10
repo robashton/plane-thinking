@@ -23,38 +23,21 @@ var Game = function () {
 
   var world = engine.world();
 
-  var backgroundCloudLayer2 = world.addLayer(3.0);
-  var backgroundCloudScene2 = new Scene(backgroundCloudLayer2);
-  var backgroundClouds2 = new Clouds(backgroundCloudLayer2, 20, 250);
-  backgroundCloudScene2.addEntity(backgroundClouds2);
+  var scene = new Scene(world);
+  
+  scene.addLayer(3.0);
+  scene.addLayer(5.0);
+  scene.addLayer(8.0);
 
-  var backgroundCloudLayer = world.addLayer(5.0);
-  var backgroundCloudScene = new Scene(backgroundCloudLayer);
-  var backgroundClouds = new Clouds(backgroundCloudLayer, 10, 250);
-  backgroundCloudScene.addEntity(backgroundClouds);
-    
-  var craftLayer = world.addLayer(8.0);
-  var playerScene = new Scene(craftLayer);
-
-  var playerCraft = new Aircraft();
-  playerScene.addEntity(playerCraft);
-
-  var stars = new Stars(craftLayer, 60, 5, 30);
-  playerScene.addEntity(stars);
-
-  var controller = new Controller(playerCraft);
-  playerScene.addEntity(controller);
-
-  var scroller  = new LayerScroller([craftLayer,backgroundCloudLayer, backgroundCloudLayer2 ]);
-  playerScene.addEntity(scroller);
-
-  scenes.push(backgroundCloudScene2);
-  scenes.push(backgroundCloudScene);
-  scenes.push(playerScene);
+  scene.addEntity(new Clouds(3.0, 20, 250));
+  scene.addEntity(new Clouds(5.0, 10, 250));
+  scene.addEntity(new Aircraft('player', 8.0));
+  scene.addEntity(new Stars(8.0, 60, 6, 30));
+  scene.addEntity(new Controller('player'));
+  scene.addEntity(new LayerScroller());
 
   var doLogic = function() {
-    for(var i = 0; i < scenes.length; i++)
-      scenes[i].tick();     
+    scene.tick();    
   };
 
   var renderScene = function () {

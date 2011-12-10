@@ -1,10 +1,20 @@
-var Scene = function(layer) {
+var Scene = function(world) {
   var self = this;
-  var entities = [];
+
+  var layers = {};
+  var entities = {};
+
+  self.addLayer = function(depth) {
+    layers[depth] = world.addLayer(depth);
+  };
+
+  self.getLayer = function(depth) {
+    return layers[depth];
+  };
 
   self.addEntity = function(entity) {
-    entities.push(entity);
-    registerEntityRenderable(entity);
+    entities[entity.id()] = entity;
+    entity.setScene(self);
   };
 
   self.tick = function() {
@@ -13,15 +23,21 @@ var Scene = function(layer) {
      });
   };
 
+  self.withEntity = function(id, callback) {
+    var entity = entities[id];
+    if(entity) callback(entity);
+  };
+
+  self.eachLayer = function(callback) {
+    for(var i in layers) {
+      callback(layers[i]);
+    }
+  };
+
   self.each = function(callback) {
-    for(var i = 0 ; i < entities.length; i++)
+    for(var i in entities)
       callback(entities[i]);
   };
 
-  var registerEntityRenderable = function(entity) {
-    if(!entity.renderable) return;
-    var renderable = entity.renderable();
-    layer.addRenderable(renderable);
-  };
 };
 

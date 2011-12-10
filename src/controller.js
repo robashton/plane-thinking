@@ -1,8 +1,24 @@
 
-var Controller = function(craft) {
-  var self = this;
+var Controller = function(craftId) {
+   Entity.call(this); var self = this;
 
-  var movingLeft = false,
+  self.id = function() { return 'controller-' + craftId; }
+  self.tick = function() {
+    scene.withEntity(craftId, function(craft) {
+      if(movingUp)
+        craft.moveUp();
+      else if (movingDown)
+        craft.moveDown();
+
+      if(movingLeft)
+        craft.moveLeft();
+      else if (movingRight)
+        craft.moveRight();
+    });
+  };
+
+  var scene = null,
+      movingLeft = false,
       movingRight = false,
       movingUp = false,
       movingDown = false;
@@ -31,17 +47,11 @@ var Controller = function(craft) {
     return false;
   };
 
-  self.tick = function() {
-    if(movingUp)
-      craft.moveUp();
-    else if (movingDown)
-      craft.moveDown();
-
-    if(movingLeft)
-      craft.moveLeft();
-    else if (movingRight)
-      craft.moveRight();
 
 
+  var onAddedToScene = function(data) {
+    scene = data.scene;
   };
+
+  self.on('addedToScene', onAddedToScene);
 };

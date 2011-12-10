@@ -1,7 +1,8 @@
 
-var Stars = function(layer, frequency, maxCount, size) {
-  var self = this;
+var Stars = function(depth, frequency, maxCount, size) {
+  Entity.call(this); var self = this;
 
+  var layer = null;
   var items = [];
   var itemsToRemove = {};
 
@@ -10,6 +11,10 @@ var Stars = function(layer, frequency, maxCount, size) {
 
   var starMaterial = new Material(255,255,255);
   starMaterial.setImage('star.png');
+
+  self.id = function() {
+    return 'stars';
+  };
   
   self.tick = function() {
     if(frameCount++ % frequency === 0 && items.length < maxCount)
@@ -64,5 +69,11 @@ var Stars = function(layer, frequency, maxCount, size) {
     renderables = newRenderables;
     itemsToRemove = {};
   };
+
+  var onAddedToScene = function(data) {
+    layer = data.scene.getLayer(depth);
+  };
+
+  self.on('addedToScene', onAddedToScene);
 };
 
