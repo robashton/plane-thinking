@@ -1,15 +1,38 @@
+// shim layer with setTimeout fallback
+window.requestAnimFrame = (function(){
+  return  window.requestAnimationFrame       || 
+          window.webkitRequestAnimationFrame || 
+          window.mozRequestAnimationFrame    || 
+          window.oRequestAnimationFrame      || 
+          window.msRequestAnimationFrame     || 
+          function(/* function */ callback, /* DOMElement */ element){
+            window.setTimeout(callback, 1000 / 60);
+          };
+})();
+
 var Game = function () {
   var self = this;
   var scenes = [];
 
-  var engine = new EngineBuilder('colour', 'depth', 'webgl')
+  var engine = new EngineBuilder('colour')
                     .nearestPoint(8.0)
                     .sceneWidth(640)
                     .sceneHeight(480)
+                    .backgroundColour(10, 10, 150)
                     .build();
 
   var world = engine.world();
-  
+
+  var backgroundCloudLayer2 = world.addLayer(3.0);
+  var backgroundCloudScene2 = new Scene(backgroundCloudLayer2);
+  var backgroundClouds2 = new Clouds(backgroundCloudLayer2, 20, 250);
+  backgroundCloudScene2.addEntity(backgroundClouds2);
+
+  var backgroundCloudLayer = world.addLayer(5.0);
+  var backgroundCloudScene = new Scene(backgroundCloudLayer);
+  var backgroundClouds = new Clouds(backgroundCloudLayer, 10, 250);
+  backgroundCloudScene.addEntity(backgroundClouds);
+    
   var craftLayer = world.addLayer(8.0);
   var playerScene = new Scene(craftLayer);
 
@@ -22,8 +45,10 @@ var Game = function () {
   var scroller  = new LayerScroller([craftLayer]);
   playerScene.addEntity(scroller);
 
+  scenes.push(backgroundCloudScene2);
+  scenes.push(backgroundCloudScene);
   scenes.push(playerScene);
-  
+
   var doLogic = function() {
     for(var i = 0; i < scenes.length; i++)
       scenes[i].tick();     
@@ -31,11 +56,12 @@ var Game = function () {
 
   var renderScene = function () {
     engine.render();
+    requestAnimFrame(renderScene);
   };
 
   self.start = function () {
     setInterval(doLogic, 1000 / 30);
-    setInterval(renderScene, 1000 / 30);
+    renderScene();
   };
 };
 
@@ -51,12 +77,56 @@ var LayerScroller = function(layers) {
   };
 };
 
-var Clouds = function(layer) {
+var Clouds = function(layer, count, size) {
   var self = this;
+  var items = [];
+  var renderables = [];
+  var cloudMaterial = new Material(255,255,255);
+  cloudMaterial.setImage('cloud.png');
 
-  
-  
+  var init = function() {
+    for(var i = 0 ; i < count ; i++) {
+      createCloud();
+    }
+  };
 
+  var createCloud = function() {
+  var cloudSize = (size / 2.0) + Math.random() * (size / 2.0);
+   var x = Math.random() * layer.getWidth() * 2.0, 
+       y = Math.random() * layer.getHeight(),
+       width = cloudSize,
+       height = cloudSize;
+
+    var renderable = new Renderable(x, y, width, height, cloudMaterial);
+
+    items.push({x: x, y: y, width: width, height: height});  
+    renderables.push(renderable);
+    layer.addRenderable(renderable);
+  };
+
+  var updateCloud = function(i) {
+    var item = items[i];
+    item.x -= 1.0;
+
+    if(item.x + item.width < 0)
+      replaceCloud(i);
+
+    renderables[i].position(item.x, item.y);
+  };
+
+  var replaceCloud = function(i) {
+    var item = items[i];
+    item.y = Math.random() * layer.getHeight();
+    item.x = layer.getWidth() + (Math.random() * layer.getWidth());
+  };
+
+  self.tick = function() {
+    for(var i = 0; i < items.length; i++) {
+      updateCloud(i);
+    }
+  };
+
+  init();
 };
 
 var Scene = function(layer) {

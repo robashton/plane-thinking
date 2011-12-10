@@ -25,99 +25,10 @@
 <body>
   <div id="container">
 
-    <canvas id="colour" width="1024" height="768" style="display: none">
+    <canvas id="colour" width="1024" height="768" style="display: block">
 
     </canvas>
 
-    <canvas id="depth" width="1024" height="768"  style="display: none">
-
-    </canvas>
-
-    <canvas id="webgl" width="1024" height="768">
-
-    </canvas>
   </div>
-
-<script type="x-shader" id="shared-vertex">
-  attribute vec3 aVertexPosition;
-  attribute vec2 aTextureCoords;
-
-  uniform mat4 uProjection;
-  uniform mat4 uView;
-  uniform mat4 uWorld;
-  varying vec2 vTextureCoords;
-
-  void main(void){
-      gl_Position =  uProjection * uView * uWorld * vec4(aVertexPosition, 1.0);
-      vTextureCoords = aTextureCoords;
-  }
-</script>
-
-<script type="x-shader" id="depth-fragment">
-  #ifdef GL_ES
-  precision highp float;
-  #endif
-
-  varying vec2 vTextureCoords;
-
-  uniform sampler2D uColourSampler;
-  uniform sampler2D uDepthSampler;
-  uniform vec2 uResolution;
-
-  const float maxDepth = 255.0;
-  const float maxBlurSize = 1.0 / 512.0;
-
-  vec4 sampleColourWidthwaysBasedOnDepth(float depth) {
-    vec4 sum = vec4(0.0);
-    float blurSize = 0.0;
-    if((maxDepth - (depth * maxDepth)) > 128.0 ) {
-     blurSize = maxBlurSize;
-    }
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x - 4.0*blurSize, vTextureCoords.y)) * 0.05;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x - 3.0*blurSize, vTextureCoords.y)) * 0.09;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x - 2.0*blurSize, vTextureCoords.y)) * 0.12;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x - blurSize, vTextureCoords.y)) * 0.15;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y)) * 0.16;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x + blurSize, vTextureCoords.y)) * 0.15;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x + 2.0*blurSize, vTextureCoords.y)) * 0.12;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x + 3.0*blurSize, vTextureCoords.y)) * 0.09;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x + 4.0*blurSize, vTextureCoords.y)) * 0.05;
-    return sum;
-  }
-
-  vec4 sampleColourHeightwaysBasedOnDepth(float depth) {
-    vec4 sum = vec4(0.0);
-    float blurSize = 0.0;
-    if((maxDepth - (depth * maxDepth)) > 128.0 ) {
-     blurSize = maxBlurSize;
-    }
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y - 4.0*blurSize)) * 0.05;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y - 3.0*blurSize)) * 0.09;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y - 2.0*blurSize)) * 0.12;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y - blurSize)) * 0.15;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y)) * 0.16;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y + blurSize)) * 0.15;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y + 2.0*blurSize)) * 0.12;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y + 3.0*blurSize)) * 0.09;
-    sum += texture2D(uColourSampler, vec2(vTextureCoords.x, vTextureCoords.y + 4.0*blurSize)) * 0.05;
-    return sum;
-  }
-
-  vec4 sampleColourFromTextureBasedOnDepth(float depth) {
-    vec4 sum = vec4(0.0);
-    sum += sampleColourHeightwaysBasedOnDepth(depth) * 0.5;
-    sum += sampleColourHeightwaysBasedOnDepth(depth) * 0.5;
-    return sum;
-  }
-
-  void main(void) {
-    float realX = uResolution.x * vTextureCoords.x;
-    float realZ = uResolution.y * vTextureCoords.y;
-    
-    vec4 depthColour = texture2D(uDepthSampler, vec2(vTextureCoords.s, vTextureCoords.t));
-    vec4 colour = sampleColourFromTextureBasedOnDepth(depthColour.r);
-    gl_FragColor = colour;
-  }
-</script>
 </body>
 </html>
