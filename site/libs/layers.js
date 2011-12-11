@@ -272,7 +272,7 @@ var CanvasRenderStage = function (colourElement, depthElement, nearestPoint) {
   };
 
   var fillColourBuffer = function (x, y, z, rotation, width, height, material) {
-    colourBuffer.setFillColor(material.rgba());
+    colourBuffer.fillStyle = material.rgba();
     applyTransforms(colourBuffer, x, y, rotation, width, height);
 
     if(material.image()) {
