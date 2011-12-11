@@ -1,5 +1,5 @@
 use Rack::Static, 
-  :root => "public"
+  :root => "site"
 
 run lambda { |env|
   [
