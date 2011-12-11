@@ -1,8 +1,9 @@
 ﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title></title>
-
+  <title>Plane Thinking</title>
+    
+  <link rel="Stylesheet" type="text/css" href="style.css" />
   <script src="../shared/glmatrix.js" type="text/javascript"></script>
   <script src="../../lib/layers.js" type="text/javascript"></script>
 
@@ -23,28 +24,29 @@
 
   <script src="../shared/jquery-1.4.1.js" type="text/javascript"></script>
   <script type="text/javascript">
-    $(document).ready(function () {
-      var game = new Game();
-      game.start();
-    });
+    
   </script>
   <style>
-    body div
-    {
-      float: left;
-      margin-left: 5px;
-    }
+
   </style>
 </head>
 <body>
-  <h1>Plane Thinking</h1>
-  <p>Collect stars, avoid pigeons. Obvious really.</p>
-  <div id="container">
+  <div id="game-start">
+    <h1>Plane Thinking</h1>
+    <p>Collect stars, avoid pigeons. Obvious really</p>
+    <p>Control the plane using the mouse, click <span id="start-action">here</span> to commence</p>
+  </div>
 
-    <canvas id="colour" width="1024" height="768" style="display: block">
+  <div id="game-over">
+    <h1>Bugger</h1>
+    <p>You died, hit too many pigeons probably. You managed to get <span id="game-over-score"></span> points before you died though, so it's not all bad</p>
+    <p>If you want another crack at it, then click <span id="restart-game-action">here</span> to give that a go.</p>
+  </div>
 
+  <div id="game-container">
+    <canvas id="colour" width="800" height="600" style="display: block">
+      
     </canvas>
-
   </div>
 
   <div id="hud">

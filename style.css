@@ -1,0 +1,60 @@
+body div
+{
+  float: left;
+  margin-left: 5px;
+}
+
+#game-start {
+  width: 800px;
+  height: 800px;
+  background-color: #000;
+  color: #EEE;
+  text-align: center;
+  display: block;
+  background-image: url('star.png');
+  background-repeat: no-repeat;
+  background-position: 430px 250px;
+}
+
+#game-start h1 {
+  margin-top: 300px;
+}
+
+#start-action {
+  color: #FF0000;
+  cursor: pointer;
+}
+
+#game-over {
+  display: none;
+  width: 800px;
+  height: 800px;
+  background-color: #000;
+  color: #EEE;
+  text-align: center;
+  background-image: url('pigeon.png');
+  background-repeat: no-repeat;
+  background-position: 480px 280px;
+}
+
+#game-over h1 {
+  margin-top: 300px;
+}
+
+#restart-game-action {
+  color: #FF0000;
+  cursor: pointer;
+}
+
+#game-container {
+  display: none;
+}
+
+#hud {
+  display: none;
+}
+
+#hud h2 {
+  display: inline;
+  float: left;
+}
