@@ -7,7 +7,7 @@ var Clouds = function(depth, count, size) {
   var items = [];
   var renderables = [];
   var cloudMaterial = new Material(255,255,255);
-  cloudMaterial.setImage('cloud.png');
+  cloudMaterial.setImage('img/cloud.png');
 
   self.id = function() {
     return 'clouds-' + depth;

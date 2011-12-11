@@ -16,7 +16,7 @@ body {
   color: #EEE;
   text-align: center;
   display: block;
-  background-image: url('star.png');
+  background-image: url('../img/star.png');
   background-repeat: no-repeat;
   background-position: 470px 250px;
 }
@@ -37,7 +37,7 @@ body {
   background-color: #000;
   color: #EEE;
   text-align: center;
-  background-image: url('pigeon.png');
+  background-image: url('../img/pigeon.png');
   background-repeat: no-repeat;
   background-position: 480px 280px;
 }

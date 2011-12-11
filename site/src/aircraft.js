@@ -16,7 +16,7 @@ var Aircraft = function(id, depth) {
   var height = 64;
 
   var aircraftMaterial = new Material(255,255,255);
-  aircraftMaterial.setImage('plane.png');
+  aircraftMaterial.setImage('img/plane.png');
   var renderable = new Renderable(0,0, width, height, aircraftMaterial);
   var layer = null;  
 

@@ -1,5 +1,5 @@
 var Stars = function(depth, frequency, maxCount, size) {
-   Spawnables.call(this, depth, frequency, maxCount, size, 'stars', 'star.png');
+   Spawnables.call(this, depth, frequency, maxCount, size, 'stars', 'img/star.png');
    var self = this;
 
   var onItemCollided = function(data) {

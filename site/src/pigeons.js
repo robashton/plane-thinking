@@ -1,5 +1,5 @@
 var Pigeons = function(depth, frequency, maxCount, size) {
-   Spawnables.call(this, depth, frequency, maxCount, size, 'pigeons', 'pigeon.png');
+   Spawnables.call(this, depth, frequency, maxCount, size, 'pigeons', 'img/pigeon.png');
    var self = this;
 
   var onItemCollided = function(data) {
