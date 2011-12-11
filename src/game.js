@@ -34,9 +34,11 @@ var Game = function () {
   scene.addEntity(new Clouds(5.0, 10, 250));
   scene.addEntity(new Aircraft('player', 8.0));
   scene.addEntity(new Stars(8.0, 60, 6, 30));
+  scene.addEntity(new Pigeons(8.0, 60, 5, 30));
   scene.addEntity(new Controller('player', document.getElementById('colour')));
   scene.addEntity(new LayerScroller());
   scene.addEntity(new Scores());
+  scene.addEntity(new PlayerKiller(3));
 
   var doLogic = function() {
     scene.tick();    
