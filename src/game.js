@@ -24,7 +24,8 @@ var Game = function () {
   var world = engine.world();
 
   var scene = new Scene(world);
-  
+  var hud = new Hud(scene);
+
   scene.addLayer(3.0);
   scene.addLayer(5.0);
   scene.addLayer(8.0);
@@ -33,8 +34,9 @@ var Game = function () {
   scene.addEntity(new Clouds(5.0, 10, 250));
   scene.addEntity(new Aircraft('player', 8.0));
   scene.addEntity(new Stars(8.0, 60, 6, 30));
-  scene.addEntity(new Controller('player'));
+  scene.addEntity(new Controller('player', document.getElementById('colour')));
   scene.addEntity(new LayerScroller());
+  scene.addEntity(new Scores());
 
   var doLogic = function() {
     scene.tick();    

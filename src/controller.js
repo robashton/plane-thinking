@@ -1,19 +1,16 @@
 
-var Controller = function(craftId) {
-   Entity.call(this); var self = this;
+var Controller = function(craftId, canvasElement) {
+  Entity.call(this); var self = this;
+
+  var inputElement = $(canvasElement);
+  var touchX = 0;
+  var touchY = 0;
+  var layer = null;
 
   self.id = function() { return 'controller-' + craftId; }
   self.tick = function() {
     scene.withEntity(craftId, function(craft) {
-      if(movingUp)
-        craft.moveUp();
-      else if (movingDown)
-        craft.moveDown();
-
-      if(movingLeft)
-        craft.moveLeft();
-      else if (movingRight)
-        craft.moveRight();
+        craft.setThrustTarget(touchX, touchY);
     });
   };
 
@@ -22,35 +19,20 @@ var Controller = function(craftId) {
       movingRight = false,
       movingUp = false,
       movingDown = false;
-  
-  document.onkeydown = function(ev) {
-    if(ev.keyCode === 37)
-      movingLeft = true;
-    else if(ev.keyCode === 38)
-      movingUp = true;
-    else if(ev.keyCode === 39)
-      movingRight = true;
-    else if(ev.keyCode === 40)
-      movingDown = true;
-    return false;
+
+  var onMouseMove = function(e) {
+    var x = e.pageX + inputElement.offset().left;
+    var y = e.pageY + inputElement.offset().top;
+    var coords = layer.browserToGameWorld([x,y]);
+    touchX = coords[0];
+    touchY = coords[1];    
   };
 
-  document.onkeyup = function(ev) {
-    if(ev.keyCode === 37)
-      movingLeft = false;
-    else if(ev.keyCode === 38)
-      movingUp = false;
-    else if(ev.keyCode === 39)
-      movingRight = false;
-    else if(ev.keyCode === 40)
-      movingDown = false;
-    return false;
-  };
-
-
+  inputElement.mousemove(onMouseMove);
 
   var onAddedToScene = function(data) {
     scene = data.scene;
+    layer = scene.getLayer(8.0);
   };
 
   self.on('addedToScene', onAddedToScene);

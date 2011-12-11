@@ -2,13 +2,14 @@
 var Stars = function(depth, frequency, maxCount, size) {
   Entity.call(this); var self = this;
 
+
   var layer = null;
   var items = [];
   var itemsToRemove = {};
 
   var renderables = [];
   var frameCount = 0;
-
+  var scene = null;
   var starMaterial = new Material(255,255,255);
   starMaterial.setImage('star.png');
 
@@ -23,7 +24,25 @@ var Stars = function(depth, frequency, maxCount, size) {
       updateStar(i);
     }
     purgeStaleStars();
-  };  
+  };
+
+  var detectCollisionsBetweenStarAndPlayer = function(i) {
+    var star = items[i];
+    scene.withEntity('player', function(player) {
+      if(player.intersectsWith({
+        x: star.x,
+        y: star.y,
+        width: star.size,
+        height: star.height
+      })) {
+        removeStar(i);
+        self.raise('star-gathered', {
+          x: star.x,
+          y: star.y
+        });
+      }
+    });
+  };
 
   var spawnNewStar = function() {
     var star = {
@@ -43,9 +62,8 @@ var Stars = function(depth, frequency, maxCount, size) {
     if(star.x + star.size < layer.getLeft()) {
       removeStar(i);
     }
-    else {
+    else if(!detectCollisionsBetweenStarAndPlayer(i))
       renderables[i].position(star.x, star.y);
-    }
   };
 
   var removeStar = function(i) {
@@ -71,7 +89,8 @@ var Stars = function(depth, frequency, maxCount, size) {
   };
 
   var onAddedToScene = function(data) {
-    layer = data.scene.getLayer(depth);
+    scene = data.scene;
+    layer = scene.getLayer(depth);
   };
 
   self.on('addedToScene', onAddedToScene);

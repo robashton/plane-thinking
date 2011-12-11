@@ -9,13 +9,14 @@ var Entity = function() {
   };
 
   var raiseAddedToScene = function() {
-    raise('addedToScene', {scene: scene });
+    self.raise('addedToScene', {scene: scene });
   };
 
-  var raise = function(eventName, data) {
+  self.raise = function(eventName, data) {
     var container = eventListeners[eventName];
     if(container)
       container.raise(self, data);
+    scene.sendEvent(self, eventName, data);
   };
 
   self.on = function(eventName, callback) {
