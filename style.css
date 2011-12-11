@@ -2,6 +2,11 @@ body div
 {
   float: left;
   margin-left: 5px;
+
+}
+
+body {
+  background: #000;
 }
 
 #game-start {
@@ -13,7 +18,7 @@ body div
   display: block;
   background-image: url('star.png');
   background-repeat: no-repeat;
-  background-position: 430px 250px;
+  background-position: 470px 250px;
 }
 
 #game-start h1 {
@@ -52,9 +57,12 @@ body div
 
 #hud {
   display: none;
+  clear: left;
+  color: #EEE;
 }
 
 #hud h2 {
   display: inline;
   float: left;
+  margin-left: 20px;
 }

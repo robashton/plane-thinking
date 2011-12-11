@@ -1,7 +1,8 @@
 var Hud = function(scene) {
   var self = this;
-  var scoreElement = $('#player-score');
+  var scoreElement = $('.player-score');
   var lifeElement = $('#player-lives');
+  
 
   var onScoreChanged = function(data) {
     scoreElement.text(data.score);
@@ -11,8 +12,9 @@ var Hud = function(scene) {
     lifeElement.text(data.lives);
   };
 
-  var onPlayerSpawned= function(data) {
+  var onPlayerSpawned = function(data) {
     lifeElement.text(data.lives);
+    scoreElement.text(0);
   };
 
   scene.on('score-changed', onScoreChanged);

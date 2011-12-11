@@ -1,5 +1,5 @@
 var Entity = function() {
-  var self = this;
+  Eventable.call(this); var self = this;
   var scene = null;
   var eventListeners = {};
 
@@ -12,28 +12,9 @@ var Entity = function() {
     self.raise('addedToScene', {scene: scene });
   };
 
-  self.raise = function(eventName, data) {
-    var container = eventListeners[eventName];
-    if(container)
-      container.raise(self, data);
-    scene.sendEvent(self, eventName, data);
+  var onAnyEventRaised = function(data) {
+    scene.raise(data.event, data.data);
   };
 
-  self.on = function(eventName, callback) {
-    eventContainerFor(eventName).add(callback);
-  };
-
-  self.off = function(eventName, callback) {
-    eventContainerFor(eventName).remove(callback);
-  };  
-
-  var eventContainerFor = function(eventName) {
-    var container = eventListeners[eventName];
-    if(!container) {
-      container =  new EventContainer();
-      eventListeners[eventName] = container;
-    }
-    return container;
-  };
-  
+  self.onAny(onAnyEventRaised);
 };

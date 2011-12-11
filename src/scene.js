@@ -1,10 +1,9 @@
 var Scene = function(world) {
-  var self = this;
+ Eventable.call(this); var self = this;
 
   var layers = {};
   var entitiesById = {};
   var entitiesByIndex = [];
-  var eventListeners = {};
 
   self.addLayer = function(depth) {
     layers[depth] = world.addLayer(depth);
@@ -48,29 +47,6 @@ var Scene = function(world) {
          callback(i,j,entitiesByIndex[i], entitiesByIndex[j]);
       }
     }
-  };
-
-  self.on = function(eventName, callback) {
-    eventContainerFor(eventName).add(callback);
-  };
-
-  self.off = function(eventName, callback) {
-    eventContainerFor(eventName).remove(callback);
-  }; 
-
-  var eventContainerFor = function(eventName) {
-    var container = eventListeners[eventName];
-    if(!container) {
-      container =  new EventContainer();
-      eventListeners[eventName] = container;
-    }
-    return container;
-  };
-
-  self.sendEvent = function(sender, eventName, data) {
-    var container = eventListeners[eventName];
-    if(container)
-      container.raise(sender, data);
   };
 };
 
