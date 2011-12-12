@@ -76,6 +76,7 @@ var Game = function () {
     scene.addEntity(new LayerScroller());
     scene.addEntity(new Scores());
     scene.addEntity(new PlayerKiller(3));
+    scene.addEntity(new SoundEffects());
     scene.on('player-killed', onPlayerKilled);
 
     initializeParticles(scene);
