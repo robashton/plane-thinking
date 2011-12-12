@@ -1,5 +1,5 @@
 use Rack::Static, 
-    :urls => ["/src", "/libs", "/css", "/img"],
+    :urls => ["/src", "/libs", "/css", "/img", "/audio"],
     :root => "site"
 
 run lambda { |env|
