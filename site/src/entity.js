@@ -8,12 +8,22 @@ var Entity = function() {
     raiseAddedToScene();
   };
 
+  self.clearScene = function() {
+    scene = null;
+    raiseRemovedFromScene();
+  };
+
   var raiseAddedToScene = function() {
     self.raise('addedToScene', {scene: scene });
   };
 
+  var raiseRemovedFromScene = function() {
+    self.raise('removedFromScene');
+  };
+
   var onAnyEventRaised = function(data) {
-    scene.raise(data.event, data.data);
+    if(scene)
+      scene.raise(data.event, data.data);
   };
 
   self.onAny(onAnyEventRaised);

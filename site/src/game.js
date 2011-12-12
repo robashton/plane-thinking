@@ -85,22 +85,31 @@ var Game = function () {
   var initializeParticles = function(scene) {
     var config = {
       types: {
-      'star': {
-        burst: 15,
-        maxCount: 45,
-        material: new Material(255,255,255),
-        width: 10,
-        height: 10
-      },
-      'pigeon': {
-        burst: 15,
-        maxCount: 45,
-        material: new Material(255,255,255),
-        width: 10,
-        height: 10
-      }
+        'star': {
+          burst: 15,
+          maxCount: 45,
+          material: new Material(255,255,255),
+          width: 10,
+          height: 10
+        },
+        'pigeon': {
+          burst: 15,
+          maxCount: 45,
+          material: new Material(255,255,255),
+          width: 10,
+          height: 10
+        },
+        'explosion': {
+          burst: 50,
+          maxCount: 50,
+          material: new Material(255,255,255),
+          width: 10,
+          height: 10,
+          lifetime: 300
+        }
       }
     };
+    config.types.explosion.material.setImage('img/star-particle.png');
     config.types.star.material.setImage('img/star-particle.png');
     config.types.pigeon.material.setImage('img/pigeon-particle.png');
     var particleEngine = new Particles(8.0, config);
@@ -114,7 +123,7 @@ var Game = function () {
   };
 
   var onPlayerKilled = function() {
-    setTimeout(self.stop, 1000);
+    setTimeout(self.stop, 3000);
   };
 };
 

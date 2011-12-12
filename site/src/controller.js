@@ -10,7 +10,7 @@ var Controller = function(craftId, canvasElement) {
   self.id = function() { return 'controller-' + craftId; }
   self.tick = function() {
     scene.withEntity(craftId, function(craft) {
-        craft.setThrustTarget(touchX, touchY);
+      craft.setThrustTarget(touchX, touchY);
     });
   };
 

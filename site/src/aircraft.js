@@ -116,7 +116,12 @@ var Aircraft = function(id, depth) {
     layer.addRenderable(renderable);
   };
 
+   var onRemovedFromScene = function(data) {
+    layer.removeRenderable(renderable);
+  }; 
+
   self.on('addedToScene', onAddedToScene);
+  self.on('removedFromScene', onRemovedFromScene);
 };
 
 Aircraft.Speed = 3.0;

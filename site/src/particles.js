@@ -93,7 +93,7 @@ var Particles = function(depth, config) {
       texture: itemConfig.texture || null,
       width: itemConfig.width || 5,
       height: itemConfig.width || 5,
-      lifetime: itemConfig.time || 60,
+      lifetime: itemConfig.lifetime || 60,
       velocity: itemConfig.velocity || 1.0,
       material: itemConfig.material || new Material(255,255,255)
     };

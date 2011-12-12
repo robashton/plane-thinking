@@ -1,5 +1,6 @@
 var PlayerKiller = function(lives) {
   Entity.call(this); var self = this;
+  var scene = null;
 
   self.id = function() { return 'player-killer'; }
 
@@ -9,17 +10,28 @@ var PlayerKiller = function(lives) {
       lives: lives
     });
     if(lives === 0)
-      killPlayer();
+      killPlayer(data);
   };
 
-  var killPlayer = function() {
-    self.raise('player-killed');
+  var killPlayer = function(data) {
+    self.raise('player-killed', {
+      x: data.x,
+      y: data.y,
+      z: data.z
+    });
   };
   
   var onAddedToScene = function(data) {
-    data.scene.on('pigeon-hit', onPigeonHit);
+    scene = data.scene;
+    scene.on('pigeon-hit', onPigeonHit);
     self.raise('player-spawned', { lives: lives });
   };
 
+  var onPlayerKilled = function() {
+    var player = scene.getEntity('player');
+    scene.removeEntity(player);
+  };
+  
+  self.on('player-killed', onPlayerKilled);
   self.on('addedToScene', onAddedToScene);
 };

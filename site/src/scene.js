@@ -19,6 +19,20 @@ var Scene = function(world) {
     entity.setScene(self);
   };
 
+  self.removeEntity = function(entity) {
+    delete entitiesById[entity.id()];
+    var newEntities = [];
+    for(var i = 0 ; i < entitiesByIndex.length; i++)
+      if(entitiesByIndex[i] !== entity) 
+        newEntities.push(entitiesByIndex[i]);
+    entitiesByIndex = newEntities;
+    entity.clearScene();
+  };
+
+  self.getEntity = function(id, callback) {
+    return entitiesById[id];
+  };
+
   self.tick = function() {
      self.each(function(entity) {
         if(entity.tick) entity.tick();
@@ -37,6 +51,7 @@ var Scene = function(world) {
   };
 
   self.each = function(callback) {
+    console.log(entitiesByIndex.length);
     for(var i = 0; i < entitiesByIndex.length; i++)
       callback(entitiesByIndex[i]);
   };
