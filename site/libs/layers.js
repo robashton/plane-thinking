@@ -624,3 +624,371 @@ var EngineBuilder = function(colourId, depthId, webglId) {
   };  
 };
 
+var Eventable = function() {
+  var self = this;
+  var eventListeners = {};
+  var allContainer = new EventContainer();
+
+  self.on = function(eventName, callback) {
+    eventContainerFor(eventName).add(callback);
+  };
+
+  self.off = function(eventName, callback) {
+    eventContainerFor(eventName).remove(callback);
+  }; 
+
+  self.onAny = function(callback) {
+    allContainer.add(callback);
+  };
+
+  self.raise = function(eventName, data) {
+    var container = eventListeners[eventName];
+
+    if(container)
+      container.raise(self, data);
+
+    allContainer.raise(self, {
+      event: eventName,
+      data: data
+    });
+  };
+
+  var eventContainerFor = function(eventName) {
+    var container = eventListeners[eventName];
+    if(!container) {
+      container =  new EventContainer();
+      eventListeners[eventName] = container;
+    }
+    return container;
+  };
+};
+
+var Entity = function() {
+  Eventable.call(this); var self = this;
+  var scene = null;
+  var eventListeners = {};
+
+  self.setScene = function(nscene) {
+    scene = nscene;
+    raiseAddedToScene();
+  };
+
+  self.clearScene = function() {
+    scene = null;
+    raiseRemovedFromScene();
+  };
+
+  var raiseAddedToScene = function() {
+    self.raise('addedToScene', {scene: scene });
+  };
+
+  var raiseRemovedFromScene = function() {
+    self.raise('removedFromScene');
+  };
+
+  var onAnyEventRaised = function(data) {
+    if(scene)
+      scene.raise(data.event, data.data);
+  };
+
+  self.onAny(onAnyEventRaised);
+};
+
+var Scene = function(world, resources) {
+ Eventable.call(this); var self = this;
+
+  var layers = {};
+  var entitiesById = {};
+  var entitiesByIndex = [];
+  self.resources = resources;
+
+  self.addLayer = function(depth) {
+    layers[depth] = world.addLayer(depth);
+  };
+
+  self.getLayer = function(depth) {
+    return layers[depth];
+  };
+
+  self.addEntity = function(entity) {
+    entitiesById[entity.id()] = entity;
+    entitiesByIndex.push(entity);
+    entity.setScene(self);
+  };
+
+  self.removeEntity = function(entity) {
+    delete entitiesById[entity.id()];
+    var newEntities = [];
+    for(var i = 0 ; i < entitiesByIndex.length; i++)
+      if(entitiesByIndex[i] !== entity) 
+        newEntities.push(entitiesByIndex[i]);
+    entitiesByIndex = newEntities;
+    entity.clearScene();
+  };
+
+  self.getEntity = function(id, callback) {
+    return entitiesById[id];
+  };
+
+  self.tick = function() {
+     self.each(function(entity) {
+        if(entity.tick) entity.tick();
+     });
+  };
+
+  self.withEntity = function(id, callback) {
+    var entity = entitiesById[id];
+    if(entity) callback(entity);
+  };
+
+  self.eachLayer = function(callback) {
+    for(var i in layers) {
+      callback(layers[i]);
+    }
+  };
+
+  self.each = function(callback) {
+    for(var i = 0; i < entitiesByIndex.length; i++)
+      callback(entitiesByIndex[i]);
+  };
+
+  self.crossEach = function(callback) {
+    for(var i = 0; i < entitiesByIndex.length; i++) {
+      for(var j = i; j < entitiesByIndex.length; j++) {
+         callback(i,j,entitiesByIndex[i], entitiesByIndex[j]);
+      }
+    }
+  };
+};
+
+
+var Particles = function(depth, config) {
+  Entity.call(this); var self = this;
+
+  var scene = null;
+  var time = 0;
+  var particles = {};
+  var layer = null;
+
+  self.id = function() { return "particle-system-" + depth; }
+
+  self.tick = function() {  
+    time++;
+    updateParticles();
+  };
+
+  self.setLayer = function(nlayer) {
+    layer = nlayer;
+  };
+
+  self.render = function(context) {
+    for(var type in particles)
+      renderParticlesForType(context, type, particles[type]);
+  };
+
+  var renderParticlesForType = function(context, type, system) {
+    for(var i = 0; i < system.items.length; i++) {
+      var item = system.items[i];
+      if(!item.exists) continue;
+      context.fillRect(item.x, item.y, layer.getDepth(), 0, item.width, item.height, system.material);     
+    }
+  };
+
+  var updateParticles = function() {
+    for(var type in particles) {
+      updateParticlesForType(type, particles[type]);
+    };
+  };
+
+  var updateParticlesForType = function(type, system) {
+    for(var i = 0; i < system.items.length; i++) {
+      var item = system.items[i];
+      if(!item.exists) continue;
+
+      if(time - item.firedAt > system.lifetime) {
+        item.exists = false;      
+        continue;
+      }
+
+      item.x += item.velx;
+      item.y += item.vely;
+    }
+  };
+
+  var onParticlesEmitted = function(data) {
+    if(data.z !== depth) return;
+    var system = particles[data.id];
+    if(system) {
+      fireParticles(system, data);
+    } else console.warn('Particle system required that does not exist: ' + data.id);
+  }; 
+
+  var fireParticles = function(system, data) {
+    var desiredCount = data.burst || system.burst;
+    var createdCount = 0;
+    for(var i = 0; i < system.items.length; i++) {
+      var item = system.items[i];
+      if(item.exists) continue;
+      
+      item.exists = true;
+      item.x = data.x * layer.getRenderScaleFactor();
+      item.y = data.y * layer.getRenderScaleFactor();
+      item.velx = (Math.random() * system.velocity - (system.velocity / 2.0)) * layer.getRenderScaleFactor();
+      item.vely = (Math.random() * system.velocity - (system.velocity / 2.0)) * layer.getRenderScaleFactor();
+      item.width = system.width * layer.getRenderScaleFactor();
+      item.heght = system.height * layer.getRenderScaleFactor();
+      item.firedAt = time;   
+
+      createdCount++;
+      if(createdCount === desiredCount) return;
+    }
+  };
+
+  var createSystems = function() {
+    for(var type in config.types) {
+      createSystem(type, config.types[type]);
+    };
+  };
+
+  var createSystem = function(type, itemConfig) {
+    particles[type] = {
+      maxCount: itemConfig.maxCount || 15,
+      burst: itemConfig.burst || 5,
+      texture: itemConfig.texture || null,
+      width: itemConfig.width || 5,
+      height: itemConfig.width || 5,
+      lifetime: itemConfig.lifetime || 60,
+      velocity: itemConfig.velocity || 1.0,
+      material: itemConfig.material || new Material(255,255,255)
+    };
+    initializeSystem(particles[type]);
+  };
+
+  var initializeSystem = function(data) {
+    data.items = new Array(data.maxCount);
+    for(var i = 0; i < data.items.length; i++) {
+      data.items[i] = {
+        exists: false,
+        x: 0, y: 0,
+        velx: 0.0, vely: 0.0,
+        width: data.width, 
+        height: data.height
+      };
+    };
+  };
+
+  var onAddedToScene = function(data) {
+     scene = data.scene;
+     var layer = scene.getLayer(depth);
+     layer.addRenderable(self);
+     scene.on('particles-emitted', onParticlesEmitted);
+     createSystems();
+  };
+
+  self.on('addedToScene', onAddedToScene);
+}; 
+
+var ResourceLoader = function(handlers) {
+  Eventable.call(this);
+
+  var self = this,
+      pendingResourceCount = 0;
+
+  self.get = function(name) {
+    var handler = findHandlerForResource(name);
+    if(!handler) {
+      console.error("Failed to find handler for resource: " + name);
+    }
+    return loadResourceFromHandler(handler, name);    
+  };
+
+  var loadResourceFromHandler = function(handler, name) {
+    pendingResourceCount++;
+    var resource = handler.get(name);
+    resource.on('loaded', onResourceLoaded);
+    resource.load();
+    return resource;
+  };
+
+  var onResourceLoaded = function() {
+    pendingResourceCount--;
+    if(pendingResourceCount === 0)
+      self.raise('all-resources-loaded');
+  };
+
+  var findHandlerForResource = function(name) {
+    for(var i = 0; i < handlers.length; i++) {
+      if(handlers[i].handles(name)) return handlers[i];
+    }
+    return null;
+  };  
+};
+
+var Sound = function(url) {
+  Eventable.call(this);  
+
+  var self = this;
+  
+  self.load = function() {
+    var audio = new Audio(url);
+    audio.loadeddata = onInitialLoadCompleted;
+  };
+
+  var onInitialLoadCompleted = function() {
+    self.raise('loaded');
+  };
+
+  self.play = function(volume) {
+    var audio = new Audio(url);
+    audio.volume = volume;
+    audio.play();
+  };  
+};
+
+var SoundHandler = function() {
+  var self = this;
+
+  self.handles = function(path) {
+    return path.indexOf('.wav') > 0;
+  };
+
+  self.get = function(path) {
+    return new Sound(path);
+  };
+};
+
+var Texture = function(url) {
+  Eventable.call(this);  
+
+  var self = this;
+  var image = null;
+
+  self.load = function() {
+    image = new Image();
+    image.src = url;
+    image.loadeddata = onInitialLoadCompleted;
+  };
+
+  self.get = function() {
+    return image;
+  };
+
+  var onInitialLoadCompleted = function() {
+    self.raise('loaded');
+  };
+};
+
+var TextureHandler = function() {
+  Eventable.call(this);
+  
+  var self = this;
+
+  self.handles = function(url) {
+    return url.indexOf('.png') > 0;
+  };
+  
+  self.get = function(url) {
+    return new Texture(url);
+  };
+};
+
