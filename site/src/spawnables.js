@@ -9,7 +9,6 @@ var Spawnables = function(depth, frequency, maxCount, size, id, texture) {
   var frameCount = 0;
   var scene = null;
   var material = new Material(255,255,255);
-  material.setImage(texture);
 
   self.id = function() {
     return id;
@@ -89,6 +88,7 @@ var Spawnables = function(depth, frequency, maxCount, size, id, texture) {
   var onAddedToScene = function(data) {
     scene = data.scene;
     layer = scene.getLayer(depth);
+    material.setImage(scene.resources.get(texture));
   };
 
   self.on('addedToScene', onAddedToScene);

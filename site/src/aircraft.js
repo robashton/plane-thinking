@@ -16,7 +16,6 @@ var Aircraft = function(id, depth) {
   var height = 64;
 
   var aircraftMaterial = new Material(255,255,255);
-  aircraftMaterial.setImage('img/plane.png');
   var renderable = new Renderable(0,0, width, height, aircraftMaterial);
   var layer = null;  
 
@@ -112,6 +111,7 @@ var Aircraft = function(id, depth) {
   };
 
   var onAddedToScene = function(data) {
+    aircraftMaterial.setImage(data.scene.resources.get('img/plane.png'));
     layer = data.scene.getLayer(depth);
     layer.addRenderable(renderable);
   };

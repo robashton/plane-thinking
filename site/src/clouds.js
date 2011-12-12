@@ -7,7 +7,6 @@ var Clouds = function(depth, count, size) {
   var items = [];
   var renderables = [];
   var cloudMaterial = new Material(255,255,255);
-  cloudMaterial.setImage('img/cloud.png');
 
   self.id = function() {
     return 'clouds-' + depth;
@@ -20,6 +19,7 @@ var Clouds = function(depth, count, size) {
   };
 
   var onAddedToScene = function(data) {
+    cloudMaterial.setImage(data.scene.resources.get('img/cloud.png'));
     layer = data.scene.getLayer(depth);
     setupInitialClouds();
   };

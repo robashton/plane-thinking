@@ -60,7 +60,9 @@ var Game = function () {
 
     var world = engine.world();
 
-    scene = new Scene(world);
+    var resources = new ResourceLoader([new TextureHandler(), new SoundHandler()]);
+
+    scene = new Scene(world, resources);
     hud = new Hud(scene);
 
     scene.addLayer(3.0);
@@ -109,9 +111,9 @@ var Game = function () {
         }
       }
     };
-    config.types.explosion.material.setImage('img/star-particle.png');
-    config.types.star.material.setImage('img/star-particle.png');
-    config.types.pigeon.material.setImage('img/pigeon-particle.png');
+    config.types.explosion.material.setImage(scene.resources.get('img/star-particle.png'));
+    config.types.star.material.setImage(scene.resources.get('img/star-particle.png'));
+    config.types.pigeon.material.setImage(scene.resources.get('img/pigeon-particle.png'));
     var particleEngine = new Particles(8.0, config);
     scene.addEntity(particleEngine);
     scene.addEntity(new ParticleEmitter());

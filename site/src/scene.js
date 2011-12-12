@@ -1,9 +1,10 @@
-var Scene = function(world) {
+var Scene = function(world, resources) {
  Eventable.call(this); var self = this;
 
   var layers = {};
   var entitiesById = {};
   var entitiesByIndex = [];
+  self.resources = resources;
 
   self.addLayer = function(depth) {
     layers[depth] = world.addLayer(depth);
@@ -51,7 +52,6 @@ var Scene = function(world) {
   };
 
   self.each = function(callback) {
-    console.log(entitiesByIndex.length);
     for(var i = 0; i < entitiesByIndex.length; i++)
       callback(entitiesByIndex[i]);
   };
