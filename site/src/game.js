@@ -84,10 +84,24 @@ var Game = function () {
   var initializeParticles = function(scene) {
     var config = {
       types: {
-      'star': {},
-      'pigeon': {}
+      'star': {
+        burst: 15,
+        maxCount: 45,
+        material: new Material(255,255,255),
+        width: 10,
+        height: 10
+      },
+      'pigeon': {
+        burst: 15,
+        maxCount: 45,
+        material: new Material(255,255,255),
+        width: 10,
+        height: 10
+      }
       }
     };
+    config.types.star.material.setImage('img/star-particle.png');
+    config.types.pigeon.material.setImage('img/pigeon-particle.png');
     var particleEngine = new Particles(8.0, config);
     scene.addEntity(particleEngine);
     scene.addEntity(new ParticleEmitter());

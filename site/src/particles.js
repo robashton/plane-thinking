@@ -82,7 +82,7 @@ var Particles = function(depth, config) {
 
   var createSystems = function() {
     for(var type in config.types) {
-      createSystem(type, config.types);
+      createSystem(type, config.types[type]);
     };
   };
 
