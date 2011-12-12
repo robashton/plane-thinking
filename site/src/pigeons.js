@@ -5,7 +5,8 @@ var Pigeons = function(depth, frequency, maxCount, size) {
   var onItemCollided = function(data) {
     self.raise('pigeon-hit', {
       x: data.x,
-      y: data.y
+      y: data.y,
+      z: depth
     });
   };
 

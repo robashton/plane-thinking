@@ -5,7 +5,8 @@ var Stars = function(depth, frequency, maxCount, size) {
   var onItemCollided = function(data) {
     self.raise('star-gathered', {
       x: data.x,
-      y: data.y
+      y: data.y,
+      z: depth
     });
   };
 

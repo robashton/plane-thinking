@@ -48,7 +48,7 @@ var Renderable = function(x, y, width, height, material) {
   };
 
   self.render = function(context) {
-    context.fillRect(rx, ry, layer.getDepth(), rotation, rwidth, rheight, material)
+    context.fillRect(rx, ry, layer.getDepth(), rotation, rwidth, rheight, material);
   };
 
   var updateRenderCoords = function() {

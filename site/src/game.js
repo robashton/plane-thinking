@@ -77,6 +77,20 @@ var Game = function () {
     scene.addEntity(new Scores());
     scene.addEntity(new PlayerKiller(3));
     scene.on('player-killed', onPlayerKilled);
+
+    initializeParticles(scene);
+  };
+
+  var initializeParticles = function(scene) {
+    var config = {
+      types: {
+      'star': {},
+      'pigeon': {}
+      }
+    };
+    var particleEngine = new Particles(8.0, config);
+    scene.addEntity(particleEngine);
+    scene.addEntity(new ParticleEmitter());
   };
 
   var startTimers = function() {
