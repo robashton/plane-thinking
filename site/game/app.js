@@ -449,8 +449,11 @@ define('libs/layers/scene/scene',['../shared/eventable'], function(Eventable) {
 
 
 
-define('libs/layers/render/layer',[],function() {
+define('libs/layers/render/layer',['require','../shared/eventable'],function(require) {
+  var Eventable = require('../shared/eventable');
+
   return function (config) {
+    Eventable.call(this);
     var self = this;
     var items = [];
 
@@ -508,6 +511,7 @@ define('libs/layers/render/layer',[],function() {
 
     self.transformX = function(x) {
       transformX = x;
+      self.raise('onTransformed', { x: x });
     };
 
     self.browserToGameWorld = function(points) {
@@ -1202,144 +1206,6 @@ define('src/clouds',['require','../libs/layers/scene/entity','../libs/layers/ren
   };
 });
 
-define('src/aircraft',['require','../libs/layers/scene/entity','../libs/layers/render/renderable','../libs/layers/render/material'],function(require) {
-  var Entity = require('../libs/layers/scene/entity');
-  var Renderable = require('../libs/layers/render/renderable');
-  var Material = require('../libs/layers/render/material');
-
-  var Aircraft = function(id, depth) {
-    Entity.call(this); var self = this;
-
-    var thrustAmount = 0.2;
-    var friction = 0.97;
-    var gravity = 0.005;
-    var thrustTarget = vec3.create([0,0,0]);
-    var desiredDirection = vec3.create([0,0,0]);
-    var position = vec3.create([256,256,0]);
-    var velocity = vec3.create([0,0,0]);
-    var currentRotation = Math.PI / 2; // FORWARDS HO!
-    var desiredRotation = 0;
-    var rotationSpeed = 0.07;
-    var width = 64;
-    var height = 64;
-    var distanceFromTarget = 0;
-
-    var aircraftMaterial = new Material(255,255,255);
-    var renderable = new Renderable(0,0, width, height, aircraftMaterial);
-    var layer = null;  
-
-    self.id = function() { return id; }
-
-    self.tick = function() {
-      updateDirectionTowardsTarget();
-      updateVelocityBasedOnDirection();
-      updatePositionBasedOnVelocity();
-      updateRenderableComponent();
-    };
-
-    self.setThrustTarget = function(x, y) {
-      thrustTarget[0] = x;
-      thrustTarget[1] = y;
-    };  
-
-    self.intersectsWith = function(square) {
-      if(position[0] + width < square.x) return false;
-      if(position[1] + height < square.y) return false;
-      if(position[0] > square.x + square.width) return false;
-      if(position[1] > square.y + square.height) return false;
-      return true;
-    };
-
-    var updateDirectionTowardsTarget = function() {
-      vec3.subtract(thrustTarget, position, desiredDirection);
-      distanceFromTarget = vec3.length(desiredDirection);
-      vec3.normalize(desiredDirection);
-      desiredRotation =  -Math.atan2(-desiredDirection[0], -desiredDirection[1]);
-      rotateTowardsTarget();
-    };
-
-    var rotateTowardsTarget = function() {
-      adjustDesiredRotationToNearestPoint();
-      if(trySnapToDesiredRotation()) return;  
-       
-      if(desiredRotation > currentRotation)
-        currentRotation += rotationSpeed;
-      else 
-        currentRotation -= rotationSpeed;
-    };
-
-    var trySnapToDesiredRotation = function() {    
-      if(Math.abs(desiredRotation - currentRotation) <= (rotationSpeed * 2.0)) {
-        currentRotation = desiredRotation;  
-        return true;
-      };
-    };
-
-    var adjustDesiredRotationToNearestPoint = function() {
-      if(desiredRotation - currentRotation > Math.PI)
-         desiredRotation -= Math.PI * 2.0;
-      else if(currentRotation - desiredRotation > Math.PI)
-        desiredRotation += Math.PI * 2.0;
-    };
-
-    var updateVelocityBasedOnDirection = function() {
-      applyThrust();
-      applyGravity();
-      applyDrag();
-      position[0] += 3.0;
-    };
-   
-    var applyThrust = function() {
-      var adjustedThrustAmount = Math.min(thrustAmount, thrustAmount * (distanceFromTarget / 100.0))    
-
-
-      var x = Math.sin(currentRotation) * adjustedThrustAmount;
-      var y = -Math.cos(currentRotation) * adjustedThrustAmount;
-        
-      velocity[0] += x;
-      velocity[1] += y;
-    };
-
-    var applyGravity = function() {
-      // If we're flying horizontally then gravity does not apply
-      velocity[1] += gravity;
-    };
-
-    var applyDrag = function() {
-      velocity[0] *= friction;
-      velocity[1] *= friction;
-    };
-
-    var updatePositionBasedOnVelocity = function() {
-      vec3.add(position, velocity);
-      renderable.position(position[0], position[1]);
-    };
-
-    var updateRenderableComponent = function() {
-      renderable.position(position[0], position[1]);
-
-      renderable.rotation(currentRotation - (Math.PI / 2.0));
-    };
-
-    var onAddedToScene = function(data) {
-      aircraftMaterial.setImage(data.scene.resources.get('img/plane.png'));
-      layer = data.scene.getLayer(depth);
-      layer.addRenderable(renderable);
-    };
-
-     var onRemovedFromScene = function(data) {
-      layer.removeRenderable(renderable);
-    }; 
-
-    self.on('addedToScene', onAddedToScene);
-    self.on('removedFromScene', onRemovedFromScene);
-  };
-
-  Aircraft.Speed = 3.0;
-  return Aircraft;
-});
-
-
 define('src/spawnables',['require','../libs/layers/scene/entity','../libs/layers/render/material','../libs/layers/render/renderable'],function(require) {
   var Entity = require('../libs/layers/scene/entity');
   var Material = require('../libs/layers/render/material');
@@ -1362,12 +1228,17 @@ define('src/spawnables',['require','../libs/layers/scene/entity','../libs/layers
     };
     
     self.tick = function() {
-      if(frameCount++ % frequency === 0 && items.length < maxCount)
+      if(wantsToPop() && items.length < maxCount)
         spawnNewItem();
       for(var i = 0; i < items.length; i++) {
         updateItem(i);
       }
       purgeStaleItems();
+    };
+
+    var wantsToPop = function() {
+      var value = Math.random() * frequency;
+      return (value < 1.0);
     };
 
     var detectCollisionsBetweenItemAndPlayer = function(i) {
@@ -1492,11 +1363,15 @@ define('src/controller',['require','../libs/layers/scene/entity'],function(requi
     var touchX = 0;
     var touchY = 0;
     var layer = null;
+    var lastTransformX = 0;
+    var currentTransformX = 0;
 
     self.id = function() { return 'controller-' + craftId; }
     self.tick = function() {
-      scene.withEntity(craftId, function(craft) {
-        craft.setThrustTarget(touchX, touchY);
+      scene.withEntity(craftId, function(craft) {    
+       var transformed = layer.browserToGameWorld([touchX,touchY]);
+   
+        craft.setThrustTarget(transformed[0], transformed[1]);
       });
     };
 
@@ -1509,9 +1384,8 @@ define('src/controller',['require','../libs/layers/scene/entity'],function(requi
     var onMouseMove = function(e) {
       var x = e.pageX + inputElement.offset().left;
       var y = e.pageY + inputElement.offset().top;
-      var coords = layer.browserToGameWorld([x,y]);
-      touchX = coords[0];
-      touchY = coords[1];    
+      touchX = x;
+      touchY = y;
     };
 
     inputElement.mousemove(onMouseMove);
@@ -1521,57 +1395,6 @@ define('src/controller',['require','../libs/layers/scene/entity'],function(requi
       layer = scene.getLayer(8.0);
     };
 
-    self.on('addedToScene', onAddedToScene);
-  };
-});
-
-define('src/layerscroller',['require','../libs/layers/scene/entity'],function(require) {
-  var Entity = require('../libs/layers/scene/entity');
-
-  return function() {
-    Entity.call(this); var self = this;
-    var x = 0;
-    var scene = null;
-
-    self.id = function() { return 'scroller-thingy'; }
-
-    self.tick = function() {
-      x += 3.0;
-      scene.eachLayer(function(layer) {
-        layer.transformX(x);
-      });   
-    };
-
-    var onAddedToScene = function(data) {
-      scene = data.scene;
-    };
-
-    self.on('addedToScene', onAddedToScene);
-  };
-
-});
-
-define('src/scores',['require','../libs/layers/scene/entity'],function(require) {
-  var Entity = require('../libs/layers/scene/entity');
-
-  return function() {
-    Entity.call(this); var self = this;
-    var score = 0;
-    
-    self.id = function() { return 'scores'; }
-   
-    var onStarGathered = function() {
-      score++;
-      self.raise('score-changed', {
-        score: score
-      });
-    }; 
-
-    var onAddedToScene = function(data) {
-      var scene = data.scene;
-      scene.on('star-gathered', onStarGathered);
-    };
-    
     self.on('addedToScene', onAddedToScene);
   };
 });
@@ -1630,11 +1453,11 @@ define('src/soundeffects',['require','../libs/layers/scene/entity'],function(req
     var pigeonEffect = null;
 
     var onStarGathered = function() {
-      starEffect.play(0.1);
+      starEffect.play(0.4);
     };
 
     var onPigeonHit = function() {
-      pigeonEffect.play(0.1);
+      pigeonEffect.play(0.4);
     };
 
     var onAddedToScene = function(data) {
@@ -1697,6 +1520,233 @@ define('src/particleemitter',['require','../libs/layers/scene/entity'],function(
   };
 });
 
+define('src/difficulty',['require'],function(require) {
+  var Difficulty = function(scale) {
+    var self = this;
+    var original = scale;
+
+    self.reset = function() {
+      scale = original;
+    };
+
+    self.increase = function(amount) {
+      scale += amount;
+    };
+
+    self.scale = function(input) { 
+      if(!input) return scale;
+      var difference = (original - scale);
+      difference *= input;
+      return original + difference;      
+    }    
+  };
+  return new Difficulty(1.0);
+});
+
+define('src/aircraft',['require','../libs/layers/scene/entity','../libs/layers/render/renderable','../libs/layers/render/material','./difficulty'],function(require) {
+  var Entity = require('../libs/layers/scene/entity');
+  var Renderable = require('../libs/layers/render/renderable');
+  var Material = require('../libs/layers/render/material');
+  var Difficulty  = require('./difficulty');
+
+  var Aircraft = function(id, depth) {
+    Entity.call(this); var self = this;
+
+    var thrustAmount = 0.2;
+    var friction = 0.97;
+    var gravity = 0.005;
+    var thrustTarget = vec3.create([0,0,0]);
+    var desiredDirection = vec3.create([0,0,0]);
+    var position = vec3.create([256,256,0]);
+    var velocity = vec3.create([0,0,0]);
+    var currentRotation = Math.PI / 2; // FORWARDS HO!
+    var desiredRotation = 0;
+    var rotationSpeed = 0.15;
+    var width = 64;
+    var height = 64;
+    var distanceFromTarget = 0;
+
+    var aircraftMaterial = new Material(255,255,255);
+    var renderable = new Renderable(0,0, width, height, aircraftMaterial);
+    var layer = null;  
+
+    self.id = function() { return id; }
+
+    self.tick = function() {
+      updateDirectionTowardsTarget();
+      updateVelocityBasedOnDirection();
+      updatePositionBasedOnVelocity();
+      updateRenderableComponent();
+    };
+
+    self.setThrustTarget = function(x, y) {
+      thrustTarget[0] = x;
+      thrustTarget[1] = y;
+    };  
+
+    self.intersectsWith = function(square) {
+      if(position[0] + width < square.x) return false;
+      if(position[1] + height < square.y) return false;
+      if(position[0] > square.x + square.width) return false;
+      if(position[1] > square.y + square.height) return false;
+      return true;
+    };
+
+    var updateDirectionTowardsTarget = function() {
+      vec3.subtract(thrustTarget, position, desiredDirection);
+      distanceFromTarget = vec3.length(desiredDirection);
+      vec3.normalize(desiredDirection);
+      desiredRotation =  -Math.atan2(-desiredDirection[0], -desiredDirection[1]);
+      rotateTowardsTarget();
+    };
+
+    var rotateTowardsTarget = function() {
+      adjustDesiredRotationToNearestPoint();
+      
+      var difference = restrictAngle(desiredRotation - currentRotation);
+      var adjustedRotationSpeed = rotationSpeed * Math.min(difference / 0.5, 1.0);
+      if(adjustedRotationSpeed < 0.01) return;
+       
+      if(difference < Math.PI)
+        currentRotation += adjustedRotationSpeed;
+      else 
+        currentRotation -= adjustedRotationSpeed;
+    };
+
+    var restrictAngle = function(input) {
+      while(input >= (Math.PI * 2))
+        input -= (Math.PI * 2);
+      while(input < 0)
+        input += (Math.PI * 2);
+      return input;
+    };
+
+    var adjustDesiredRotationToNearestPoint = function() {
+      desiredRotation = restrictAngle(desiredRotation);
+      currentRotation = restrictAngle(currentRotation);    
+    };
+
+    var updateVelocityBasedOnDirection = function() {
+      applyThrust();
+      applyGravity();
+      applyDrag();
+      position[0] += 3.0 * Difficulty.scale();
+      applyBounds();
+    };
+   
+    var applyThrust = function() {
+      var adjustedThrustAmount = Math.min(thrustAmount, thrustAmount * (distanceFromTarget / 100.0))    
+      adjustedThrustAmount *= Difficulty.scale(0.1);
+
+      var x = Math.sin(currentRotation) * adjustedThrustAmount;
+      var y = -Math.cos(currentRotation) * adjustedThrustAmount;
+        
+      velocity[0] += x;
+      velocity[1] += y;
+    };
+
+    var applyGravity = function() {
+      // If we're flying horizontally then gravity does not apply
+      velocity[1] += gravity;
+    };
+
+    var applyDrag = function() {
+      velocity[0] *= friction;
+      velocity[1] *= friction;
+    };
+
+    var applyBounds = function() {
+      if(position[0] < layer.getLeft()) position[0] = layer.getLeft();
+      if(position[0] + width > layer.getRight()) position[0] = layer.getRight() - width;
+      if(position[1] < 0) position[1] = 0;
+      if(position[1] + height > layer.getHeight()) position[1] = layer.getHeight() - height;
+    };
+
+    var updatePositionBasedOnVelocity = function() {
+      vec3.add(position, velocity);
+      renderable.position(position[0], position[1]);
+    };
+
+    var updateRenderableComponent = function() {
+      renderable.position(position[0], position[1]);
+
+      renderable.rotation(currentRotation - (Math.PI / 2.0));
+    };
+
+    var onAddedToScene = function(data) {
+      aircraftMaterial.setImage(data.scene.resources.get('img/plane.png'));
+      layer = data.scene.getLayer(depth);
+      layer.addRenderable(renderable);
+    };
+
+     var onRemovedFromScene = function(data) {
+      layer.removeRenderable(renderable);
+    }; 
+
+    self.on('addedToScene', onAddedToScene);
+    self.on('removedFromScene', onRemovedFromScene);
+  };
+
+  Aircraft.Speed = 3.0;
+  return Aircraft;
+});
+
+
+define('src/layerscroller',['require','../libs/layers/scene/entity','./difficulty'],function(require) {
+  var Entity = require('../libs/layers/scene/entity');
+  var Difficulty  = require('./difficulty');
+
+  return function() {
+    Entity.call(this); var self = this;
+    var x = 0;
+    var scene = null;
+
+    self.id = function() { return 'scroller-thingy'; }
+
+    self.tick = function() {
+      x += 3.0 * Difficulty.scale();
+      scene.eachLayer(function(layer) {
+        layer.transformX(x);
+      });   
+    };
+
+    var onAddedToScene = function(data) {
+      scene = data.scene;
+    };
+
+    self.on('addedToScene', onAddedToScene);
+  };
+
+});
+
+define('src/scores',['require','../libs/layers/scene/entity','./difficulty'],function(require) {
+  var Entity = require('../libs/layers/scene/entity');
+  var Difficulty  = require('./difficulty');
+
+  return function() {
+    Entity.call(this); var self = this;
+    var score = 0;
+    
+    self.id = function() { return 'scores'; }
+   
+    var onStarGathered = function() {
+      score++;
+      self.raise('score-changed', {
+        score: score
+      });
+
+      Difficulty.increase(0.05);
+    }; 
+
+    var onAddedToScene = function(data) {
+      var scene = data.scene;
+      scene.on('star-gathered', onStarGathered);
+    };
+    
+    self.on('addedToScene', onAddedToScene);
+  };
+});
+
 define('src/hud',['require'],function(require) {
   return function(scene) {
     var self = this;
@@ -1723,7 +1773,7 @@ define('src/hud',['require'],function(require) {
   };
 });
 
-define('src/game',['require','../libs/layers/components/particles','../libs/layers/shared/eventable','../libs/layers/render/material','../libs/layers/driver','./clouds','./aircraft','./stars','./pigeons','./controller','./layerscroller','./scores','./playerkiller','./soundeffects','./particleemitter','./hud'],function(require) {
+define('src/game',['require','../libs/layers/components/particles','../libs/layers/shared/eventable','../libs/layers/render/material','../libs/layers/driver','./clouds','./aircraft','./stars','./pigeons','./controller','./layerscroller','./scores','./playerkiller','./soundeffects','./particleemitter','./difficulty','./hud'],function(require) {
 
   var Particles = require('../libs/layers/components/particles');
   var Eventable = require('../libs/layers/shared/eventable');
@@ -1740,7 +1790,7 @@ define('src/game',['require','../libs/layers/components/particles','../libs/laye
   var PlayerKiller = require('./playerkiller');
   var SoundEffects = require('./soundeffects');
   var ParticleEmitter = require('./particleemitter');
-
+  var Difficulty  = require('./difficulty');
   var Hud = require('./hud');
 
   return function () {
@@ -1754,7 +1804,7 @@ define('src/game',['require','../libs/layers/components/particles','../libs/laye
     };
 
     var onStopped = function() {
-
+      Difficulty.reset();
     };
 
 
@@ -1782,8 +1832,8 @@ define('src/game',['require','../libs/layers/components/particles','../libs/laye
       scene.addEntity(new Clouds(3.0, 20, 250));
       scene.addEntity(new Clouds(5.0, 10, 250));
       scene.addEntity(new Aircraft('player', 8.0));
-      scene.addEntity(new Stars(8.0, 60, 6, 30));
-      scene.addEntity(new Pigeons(8.0, 60, 5, 30));
+      scene.addEntity(new Stars(8.0, 30, 6, 30));
+      scene.addEntity(new Pigeons(8.0, 30, 5, 30));
       scene.addEntity(new Controller('player', document.getElementById('colour')));
       scene.addEntity(new LayerScroller());
       scene.addEntity(new Scores());

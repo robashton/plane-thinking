@@ -15,7 +15,7 @@ define(function(require) {
   var PlayerKiller = require('./playerkiller');
   var SoundEffects = require('./soundeffects');
   var ParticleEmitter = require('./particleemitter');
-
+  var Difficulty  = require('./difficulty');
   var Hud = require('./hud');
 
   return function () {
@@ -29,7 +29,7 @@ define(function(require) {
     };
 
     var onStopped = function() {
-
+      Difficulty.reset();
     };
 
 
@@ -57,8 +57,8 @@ define(function(require) {
       scene.addEntity(new Clouds(3.0, 20, 250));
       scene.addEntity(new Clouds(5.0, 10, 250));
       scene.addEntity(new Aircraft('player', 8.0));
-      scene.addEntity(new Stars(8.0, 60, 6, 30));
-      scene.addEntity(new Pigeons(8.0, 60, 5, 30));
+      scene.addEntity(new Stars(8.0, 30, 6, 30));
+      scene.addEntity(new Pigeons(8.0, 30, 5, 30));
       scene.addEntity(new Controller('player', document.getElementById('colour')));
       scene.addEntity(new LayerScroller());
       scene.addEntity(new Scores());

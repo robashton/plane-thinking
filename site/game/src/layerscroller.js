@@ -1,5 +1,6 @@
 define(function(require) {
   var Entity = require('../libs/layers/scene/entity');
+  var Difficulty  = require('./difficulty');
 
   return function() {
     Entity.call(this); var self = this;
@@ -9,7 +10,7 @@ define(function(require) {
     self.id = function() { return 'scroller-thingy'; }
 
     self.tick = function() {
-      x += 3.0;
+      x += 3.0 * Difficulty.scale();
       scene.eachLayer(function(layer) {
         layer.transformX(x);
       });   

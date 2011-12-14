@@ -10,11 +10,11 @@ define(function(require) {
     var pigeonEffect = null;
 
     var onStarGathered = function() {
-      starEffect.play(0.1);
+      starEffect.play(0.4);
     };
 
     var onPigeonHit = function() {
-      pigeonEffect.play(0.1);
+      pigeonEffect.play(0.4);
     };
 
     var onAddedToScene = function(data) {

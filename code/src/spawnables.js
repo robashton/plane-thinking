@@ -20,12 +20,17 @@ define(function(require) {
     };
     
     self.tick = function() {
-      if(frameCount++ % frequency === 0 && items.length < maxCount)
+      if(wantsToPop() && items.length < maxCount)
         spawnNewItem();
       for(var i = 0; i < items.length; i++) {
         updateItem(i);
       }
       purgeStaleItems();
+    };
+
+    var wantsToPop = function() {
+      var value = Math.random() * frequency;
+      return (value < 1.0);
     };
 
     var detectCollisionsBetweenItemAndPlayer = function(i) {

@@ -2,6 +2,7 @@ define(function(require) {
   var Entity = require('../libs/layers/scene/entity');
   var Renderable = require('../libs/layers/render/renderable');
   var Material = require('../libs/layers/render/material');
+  var Difficulty  = require('./difficulty');
 
   var Aircraft = function(id, depth) {
     Entity.call(this); var self = this;
@@ -15,7 +16,7 @@ define(function(require) {
     var velocity = vec3.create([0,0,0]);
     var currentRotation = Math.PI / 2; // FORWARDS HO!
     var desiredRotation = 0;
-    var rotationSpeed = 0.07;
+    var rotationSpeed = 0.15;
     var width = 64;
     var height = 64;
     var distanceFromTarget = 0;
@@ -56,38 +57,41 @@ define(function(require) {
 
     var rotateTowardsTarget = function() {
       adjustDesiredRotationToNearestPoint();
-      if(trySnapToDesiredRotation()) return;  
+      
+      var difference = restrictAngle(desiredRotation - currentRotation);
+      var adjustedRotationSpeed = rotationSpeed * Math.min(difference / 0.5, 1.0);
+      if(adjustedRotationSpeed < 0.01) return;
        
-      if(desiredRotation > currentRotation)
-        currentRotation += rotationSpeed;
+      if(difference < Math.PI)
+        currentRotation += adjustedRotationSpeed;
       else 
-        currentRotation -= rotationSpeed;
+        currentRotation -= adjustedRotationSpeed;
     };
 
-    var trySnapToDesiredRotation = function() {    
-      if(Math.abs(desiredRotation - currentRotation) <= (rotationSpeed * 2.0)) {
-        currentRotation = desiredRotation;  
-        return true;
-      };
+    var restrictAngle = function(input) {
+      while(input >= (Math.PI * 2))
+        input -= (Math.PI * 2);
+      while(input < 0)
+        input += (Math.PI * 2);
+      return input;
     };
 
     var adjustDesiredRotationToNearestPoint = function() {
-      if(desiredRotation - currentRotation > Math.PI)
-         desiredRotation -= Math.PI * 2.0;
-      else if(currentRotation - desiredRotation > Math.PI)
-        desiredRotation += Math.PI * 2.0;
+      desiredRotation = restrictAngle(desiredRotation);
+      currentRotation = restrictAngle(currentRotation);    
     };
 
     var updateVelocityBasedOnDirection = function() {
       applyThrust();
       applyGravity();
       applyDrag();
-      position[0] += 3.0;
+      position[0] += 3.0 * Difficulty.scale();
+      applyBounds();
     };
    
     var applyThrust = function() {
       var adjustedThrustAmount = Math.min(thrustAmount, thrustAmount * (distanceFromTarget / 100.0))    
-
+      adjustedThrustAmount *= Difficulty.scale(0.1);
 
       var x = Math.sin(currentRotation) * adjustedThrustAmount;
       var y = -Math.cos(currentRotation) * adjustedThrustAmount;
@@ -104,6 +108,13 @@ define(function(require) {
     var applyDrag = function() {
       velocity[0] *= friction;
       velocity[1] *= friction;
+    };
+
+    var applyBounds = function() {
+      if(position[0] < layer.getLeft()) position[0] = layer.getLeft();
+      if(position[0] + width > layer.getRight()) position[0] = layer.getRight() - width;
+      if(position[1] < 0) position[1] = 0;
+      if(position[1] + height > layer.getHeight()) position[1] = layer.getHeight() - height;
     };
 
     var updatePositionBasedOnVelocity = function() {

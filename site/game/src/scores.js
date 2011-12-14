@@ -1,5 +1,6 @@
 define(function(require) {
   var Entity = require('../libs/layers/scene/entity');
+  var Difficulty  = require('./difficulty');
 
   return function() {
     Entity.call(this); var self = this;
@@ -12,6 +13,8 @@ define(function(require) {
       self.raise('score-changed', {
         score: score
       });
+
+      Difficulty.increase(0.05);
     }; 
 
     var onAddedToScene = function(data) {

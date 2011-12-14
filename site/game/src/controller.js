@@ -8,11 +8,15 @@ define(function(require) {
     var touchX = 0;
     var touchY = 0;
     var layer = null;
+    var lastTransformX = 0;
+    var currentTransformX = 0;
 
     self.id = function() { return 'controller-' + craftId; }
     self.tick = function() {
-      scene.withEntity(craftId, function(craft) {
-        craft.setThrustTarget(touchX, touchY);
+      scene.withEntity(craftId, function(craft) {    
+       var transformed = layer.browserToGameWorld([touchX,touchY]);
+   
+        craft.setThrustTarget(transformed[0], transformed[1]);
       });
     };
 
@@ -25,9 +29,8 @@ define(function(require) {
     var onMouseMove = function(e) {
       var x = e.pageX + inputElement.offset().left;
       var y = e.pageY + inputElement.offset().top;
-      var coords = layer.browserToGameWorld([x,y]);
-      touchX = coords[0];
-      touchY = coords[1];    
+      touchX = x;
+      touchY = y;
     };
 
     inputElement.mousemove(onMouseMove);

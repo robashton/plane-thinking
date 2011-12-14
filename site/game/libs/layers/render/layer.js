@@ -1,5 +1,8 @@
-define(function() {
+define(function(require) {
+  var Eventable = require('../shared/eventable');
+
   return function (config) {
+    Eventable.call(this);
     var self = this;
     var items = [];
 
@@ -57,6 +60,7 @@ define(function() {
 
     self.transformX = function(x) {
       transformX = x;
+      self.raise('onTransformed', { x: x });
     };
 
     self.browserToGameWorld = function(points) {
