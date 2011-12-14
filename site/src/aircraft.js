@@ -2,18 +2,19 @@
 var Aircraft = function(id, depth) {
   Entity.call(this); var self = this;
 
-  var thrustAmount = 0.3;
-  var friction = 0.95;
-  var gravity = 0.05;
+  var thrustAmount = 0.2;
+  var friction = 0.97;
+  var gravity = 0.005;
   var thrustTarget = vec3.create([0,0,0]);
   var desiredDirection = vec3.create([0,0,0]);
   var position = vec3.create([256,256,0]);
   var velocity = vec3.create([0,0,0]);
   var currentRotation = Math.PI / 2; // FORWARDS HO!
   var desiredRotation = 0;
-  var rotationSpeed = 0.08;
+  var rotationSpeed = 0.07;
   var width = 64;
   var height = 64;
+  var distanceFromTarget = 0;
 
   var aircraftMaterial = new Material(255,255,255);
   var renderable = new Renderable(0,0, width, height, aircraftMaterial);
@@ -43,6 +44,7 @@ var Aircraft = function(id, depth) {
 
   var updateDirectionTowardsTarget = function() {
     vec3.subtract(thrustTarget, position, desiredDirection);
+    distanceFromTarget = vec3.length(desiredDirection);
     vec3.normalize(desiredDirection);
     desiredRotation =  -Math.atan2(-desiredDirection[0], -desiredDirection[1]);
     rotateTowardsTarget();
@@ -50,10 +52,8 @@ var Aircraft = function(id, depth) {
 
   var rotateTowardsTarget = function() {
     adjustDesiredRotationToNearestPoint();
-    if(trySnapToDesiredRotation()) return; 
-    
-
-      
+    if(trySnapToDesiredRotation()) return;  
+     
     if(desiredRotation > currentRotation)
       currentRotation += rotationSpeed;
     else 
@@ -82,8 +82,11 @@ var Aircraft = function(id, depth) {
   };
  
   var applyThrust = function() {
-    var x = Math.sin(currentRotation) * thrustAmount;
-    var y = -Math.cos(currentRotation) * thrustAmount;
+    var adjustedThrustAmount = Math.min(thrustAmount, thrustAmount * (distanceFromTarget / 100.0))    
+
+
+    var x = Math.sin(currentRotation) * adjustedThrustAmount;
+    var y = -Math.cos(currentRotation) * adjustedThrustAmount;
       
     velocity[0] += x;
     velocity[1] += y;

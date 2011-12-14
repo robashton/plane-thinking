@@ -27,10 +27,10 @@ var Spawnables = function(depth, frequency, maxCount, size, id, texture) {
     var item = items[i];
     scene.withEntity('player', function(player) {
       if(player.intersectsWith({
-        x: item.x,
-        y: item.y,
-        width: item.size,
-        height: item.size
+        x: item.x + (item.size / 4.0),
+        y: item.y + (item.size / 4.0),
+        width: item.size / 2.0,
+        height: item.size / 2.0
       })) {
         removeItem(i);
         self.raise('item-collided', {
